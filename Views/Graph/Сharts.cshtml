@@ -1,0 +1,203 @@
+﻿@using System.Web;
+
+@model List<Consumer>
+@{
+
+    ViewData["Title"] = "Графики потребления";
+}
+<style>
+    p {
+        margin-bottom: 2%; /* Отступ сверху */
+    }
+</style>
+<div class="text-center">
+    <h1>@ViewData["Title"]</h1>
+
+    <p>Исходные графики</p>
+    <canvas id="chartPlantMain"></canvas>
+    <canvas id="chartHouseMain"></canvas>
+
+
+    <form id="dateForm">
+        <label for="date">Выберите дату начала запроса:</label>
+        <input type="date" name="dtFrom" id="date">
+        <label for="date">Выберите дату конца запроса:</label>
+        <input type="date" name="dtTo" id="date">
+        <button type="submit" id="submitDate">Обновить</button>
+    </form>
+
+
+
+    <p>Линейные графики</p>
+    <canvas id="chartHouseLinearRegression"></canvas>
+    <canvas id="chartPlantLinearRegression"></canvas>
+    <button id="drawLinearRegression">Обновить линейные графики</button>
+
+    <p>Слоёный пирог</p>
+    <canvas id="chartHouseLayerCake"></canvas>
+    <canvas id="chartPlantLayerCake"></canvas>
+    <button id="drawLayerCake">Обновить общий график за период</button>
+
+
+</div>
+
+
+<script type="text/javascript">
+
+    let chartHouseLR;
+    let ctxHLR = document.getElementById('chartHouseLinearRegression');
+    let chartPlantLR;
+    let ctxPLR = document.getElementById('chartPlantLinearRegression');
+
+    let chartHouseMain;
+    let ctxHM = document.getElementById('chartHouseMain');
+    let chartPlantMain;
+    let ctxPM = document.getElementById('chartPlantMain');
+
+    let chartHouseLC;
+    let ctxHLC = document.getElementById('chartHouseLayerCake');
+    let chartPlantLC;
+    let ctxPLC = document.getElementById('chartPlantLayerCake');
+
+    function showChart(mod, chart, chart2, isHouse, stacked) {
+        let Colors = ['#f0190a', '#f0dd0a', '#6af00a', '#0a88f0', '#1d0af0', '#a00af0'];
+        let dataset = [];
+        let j = 0;
+        let lbls = mod.lables;
+        let dependenceGrpaphs = mod.dependencyGrpaphs;
+        for (let item in dependenceGrpaphs) {
+            dataset.push({ label: dependenceGrpaphs[item].name, backgroundColor: Colors[j] + '60', borderColor: Colors[j], data: dependenceGrpaphs[item].datasets, fill: stacked });
+            j++;
+        }
+
+        const data = { labels: lbls, datasets: dataset };
+        const config = {
+            type: 'line',
+            data: data,
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: (ctx) => 'Потребление ' + (isHouse ? 'домов' : 'заводов')
+                    },
+                    tooltip: {
+                        mode: 'index'
+                    },
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: isHouse ? 'ТНВ' : 'Стоимость кирпича'
+                        }
+                    },
+                    y: {
+                        stacked: stacked,
+                        title: {
+                            display: true,
+                            text: 'Потребление'
+                        }
+                    }
+                }
+            }
+        };
+        if (!chart) { chart = new Chart(chart2, config) }
+        else {
+            chart.data.labels = lbls;
+            chart.data.datasets = dataset;
+            chart.update();
+        }
+        return (chart);
+    }
+
+    function getMainChart() {
+        let formData = $(this).serialize();        
+        $.ajax({
+            url: '@Url.Action("MainChart", "Graph")',
+            type: 'POST',
+            data: 'type=1&' + formData,
+            success: function (result) {
+                mod = $.parseJSON(result);
+                console.log(mod);
+                chartHouseMain = showChart($.parseJSON(result), chartHouseMain, ctxHM, true, false);
+            }
+        });
+        $.ajax({
+            url: '@Url.Action("MainChart", "Graph")',
+            type: 'POST',
+            data: 'type=2&' + formData,
+            success: function (result) {                
+                chartPlantMain = showChart($.parseJSON(result), chartPlantMain, ctxPM, false, false);
+
+            }
+        });
+    };
+    function getLinearRegression() {
+        $.ajax({
+            url: '@Url.Action("GetLinearRegression", "Graph")',
+            type: 'POST',
+            data: 'type=1&',
+            success: function (result) {                
+                chartHouseLR = showChart($.parseJSON(result), chartHouseLR, ctxHLR, true, false);
+
+            }
+        });
+        $.ajax({
+            url: '@Url.Action("GetLinearRegression", "Graph")',
+            type: 'POST',
+            data: 'type=2&',
+            success: function (result) {                
+                chartPlantLR = showChart($.parseJSON(result), chartPlantLR, ctxPLR, false, false);
+            }
+        });
+    }
+
+        function getLayerCake(){
+        $.ajax({
+            url: '@Url.Action("GetLayerCake", "Graph")',
+            type: 'POST',
+            data: 'type=1&',
+            success: function (result) {                
+                chartHouseLC = showChart($.parseJSON(result), chartHouseLC, ctxHLC, true, true);
+            }
+        });
+        $.ajax({
+            url: '@Url.Action("GetLayerCake", "Graph")',
+            type: 'POST',
+            data: 'type=2&',
+            success: function (result) {                
+                chartPlantLC = showChart($.parseJSON(result), chartPlantLC, ctxPLC, false, true);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        getMainChart();
+        getLinearRegression();
+        getLayerCake();
+        //---
+        $('#dateForm').submit(function (event) {
+            event.preventDefault();
+            getMainChart();
+        });
+        //---
+        $('#drawLinearRegression').click(function () {
+            getLinearRegression();
+        });
+
+        //---
+        $('#drawLayerCake').click(function () {
+            getLayerCake();
+        })
+        //---
+
+    });
+
+
+</script>

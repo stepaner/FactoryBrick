@@ -1,0 +1,40 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-6">Загрузка исходных Json данных</h1>
+    
+    <input type="file" id="fileInput">
+    <button id="parseBtn">Загрука JSON данных</button>
+</div>
+
+
+
+
+<script type="text/javascript">
+    $(function () {
+        $('#parseBtn').click(function () {
+            var file = $('#fileInput')[0].files[0];
+            var reader = new FileReader();
+            reader.readAsText(file);
+            reader.onload = function () {
+                var datas = JSON.parse(reader.result);
+                console.log(datas);
+                $.ajax({
+                    url: '/import/uploadText',
+                    type: 'POST',                    
+                    contentType: 'application/json',
+                    data: JSON.stringify(datas),
+                    success: function (data) {
+                        console.log(data);
+                    },
+                    error: function (xhr, status, error) {
+                        console.log(error);
+                    }
+                });
+            };
+        });
+    });
+   
+</script>
