@@ -1,5 +1,6 @@
 ﻿using FactoryBrick.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage;
 using Newtonsoft.Json;
 
@@ -13,6 +14,14 @@ namespace FactoryBrick.Data
         public ApplicationContext(DbContextOptions<ApplicationContext> options)
             : base(options)
         {
+            Database.EnsureCreated();           
+        }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ConsumerType>().HasData(
+                new ConsumerType { Id = 1, Dependence = "weather", Description = "дом", Name = "house" },                     
+                new ConsumerType { Id = 2, Dependence = "price", Description = "завод", Name = "plant" }
+            );
         }
         public void SaveJsonToBase(JsonRoot root)
         {
