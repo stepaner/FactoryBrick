@@ -18,9 +18,7 @@ namespace FactoryBrick
             var res = new CalculationGraphing(data);
             res.LinearRegression();
             var Graph = new DependencyGrpaphLabels();
-            Graph.DependencyGrpaphs = new List<DependencyGrpaph>();
-            var dataset = new List<Dataset>();
-            Graph.Lables = new List<object>();
+            var dataset = new List<Dataset>();       
             for (decimal i = res.min; i < res.max; i++)
             {
                 Graph.Lables.Add(i);

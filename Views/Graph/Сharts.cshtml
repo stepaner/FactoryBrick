@@ -116,8 +116,7 @@
         return (chart);
     }
 
-    function getMainChart() {
-        let formData = $(this).serialize();        
+    function getMainChart(formData = '') {           
         $.ajax({
             url: '@Url.Action("MainChart", "Graph")',
             type: 'POST',
@@ -138,11 +137,11 @@
             }
         });
     };
-    function getLinearRegression() {
+    function getLinearRegression(formData = '') {
         $.ajax({
             url: '@Url.Action("GetLinearRegression", "Graph")',
             type: 'POST',
-            data: 'type=1&',
+            data: 'type=1&' + formData,
             success: function (result) {                
                 chartHouseLR = showChart($.parseJSON(result), chartHouseLR, ctxHLR, true, false);
 
@@ -151,18 +150,18 @@
         $.ajax({
             url: '@Url.Action("GetLinearRegression", "Graph")',
             type: 'POST',
-            data: 'type=2&',
+            data: 'type=2&' + formData,
             success: function (result) {                
                 chartPlantLR = showChart($.parseJSON(result), chartPlantLR, ctxPLR, false, false);
             }
         });
     }
 
-        function getLayerCake(){
+    function getLayerCake(formData = '') {
         $.ajax({
             url: '@Url.Action("GetLayerCake", "Graph")',
             type: 'POST',
-            data: 'type=1&',
+            data: 'type=1&' + formData,
             success: function (result) {                
                 chartHouseLC = showChart($.parseJSON(result), chartHouseLC, ctxHLC, true, true);
             }
@@ -170,7 +169,7 @@
         $.ajax({
             url: '@Url.Action("GetLayerCake", "Graph")',
             type: 'POST',
-            data: 'type=2&',
+            data: 'type=2&' + formData,
             success: function (result) {                
                 chartPlantLC = showChart($.parseJSON(result), chartPlantLC, ctxPLC, false, true);
             }
@@ -184,16 +183,19 @@
         //---
         $('#dateForm').submit(function (event) {
             event.preventDefault();
-            getMainChart();
+            formData = $(this).serialize();                
+            getMainChart(formData);
         });
         //---
         $('#drawLinearRegression').click(function () {
-            getLinearRegression();
+            formData = $('#dateForm').serialize();            
+            getLinearRegression(formData);
         });
 
         //---
         $('#drawLayerCake').click(function () {
-            getLayerCake();
+            formData = $('#dateForm').serialize();
+            getLayerCake(formData);
         })
         //---
 

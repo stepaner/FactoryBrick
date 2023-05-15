@@ -68,12 +68,9 @@ namespace FactoryBrick.Data
         }
 
 
-        public DependencyGrpaphLabels GetDataLayerCake(int type)
+        public DependencyGrpaphLabels GetDataLayerCake(List<Consumer> data)
         {
-            var dependencyGrpaphL = new DependencyGrpaphLabels() { };
-            var data = Consumers.Where(x => x.ConsumerTypeId == type).Include(x => x.Consumptions).ToList();
-            dependencyGrpaphL.Lables = new List<object>();
-            dependencyGrpaphL.DependencyGrpaphs = new List<DependencyGrpaph> { };
+            var dependencyGrpaphL = new DependencyGrpaphLabels() { };            
             foreach (var consumer in data)
             {
                 dependencyGrpaphL.Lables.AddRange(consumer.Consumptions.Select(x => x.Date as object));
@@ -104,6 +101,28 @@ namespace FactoryBrick.Data
                 consumers = Consumers.Where(x => x.ConsumerTypeId == type).Include(x => x.Consumptions).ToList();
             }
             return consumers;
+        }
+
+        public List<ConsumptionData> GetConsumption(int type, DateTime? dtFrom, DateTime? dtTo)
+        {
+            List<ConsumptionData> consumptionData;
+            if (dtFrom != null && dtTo != null)
+            {
+                consumptionData = ConsumptionDatas.Where(x => x.Date >= dtFrom.Value && x.Date <= dtTo.Value && x.Consumer.ConsumerTypeId == type).ToList();
+            }
+            else if (dtFrom != null)
+            {
+                consumptionData = ConsumptionDatas.Where(x => x.Date >= dtFrom.Value && x.Consumer.ConsumerTypeId == type).ToList();
+            }
+            else if (dtTo != null)
+            {
+                consumptionData = ConsumptionDatas.Where(x => x.Date <= dtTo.Value && x.Consumer.ConsumerTypeId == type).ToList();
+            }
+            else
+            {
+                consumptionData = ConsumptionDatas.Where(x => x.Consumer.ConsumerTypeId == type).ToList();
+            }
+            return consumptionData;
         }
 
     }

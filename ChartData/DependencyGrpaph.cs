@@ -6,8 +6,8 @@ namespace FactoryBrick
 {
     public class DependencyGrpaphLabels
     {
-        public List<object> Lables { get; set; }
-        public List<DependencyGrpaph> DependencyGrpaphs { get; set; }
+        public List<object> Lables { get; set; } = new List<object>();
+        public List<DependencyGrpaph> DependencyGrpaphs { get; set; } = new List<DependencyGrpaph>();
         public static DependencyGrpaphLabels GetDependencyGrpaphLabels(List<Consumer> consumers)
         {
             List<DependencyGrpaph> dependencyGrpaphs = new List<DependencyGrpaph>();

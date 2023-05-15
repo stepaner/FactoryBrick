@@ -11,6 +11,7 @@ namespace FactoryBrick.Controllers
     {
         ApplicationContext _db;
         private readonly ILogger<GraphController> _logger;
+        JsonSerializerSettings _serializerSettings = new JsonSerializerSettings() { ContractResolver = new CamelCasePropertyNamesContractResolver(), DateFormatString = "dd-MM-yyyy" };
 
         public GraphController(ILogger<GraphController> logger, ApplicationContext db)
         {
@@ -21,23 +22,51 @@ namespace FactoryBrick.Controllers
         {
             return View();
         }
-        public IActionResult GetLayerCake(int type)
+
+        [HttpPost]
+        public IActionResult GetLayerCake(int type, DateTime? dtFrom, DateTime? dtTo)
         {
-            var res = _db.GetDataLayerCake(type);            
-            return Ok(JsonConvert.SerializeObject(res, new JsonSerializerSettings() { ContractResolver = new CamelCasePropertyNamesContractResolver() }));
+            try
+            {
+                var res = _db.GetDataLayerCake(_db.GetConsumerWithData(type, dtFrom, dtTo));
+                return Ok(JsonConvert.SerializeObject(res, _serializerSettings));
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+                throw;
+            }
         }
 
-        public IActionResult GetLinearRegression(int type)
+        [HttpPost]
+        public IActionResult GetLinearRegression(int type, DateTime? dtFrom, DateTime? dtTo)
         {
-            var res = CalculationGraphing.GetGraph(_db.ConsumptionDatas.Where(x => x.Consumer.ConsumerTypeId == type).ToList());
-            return Ok(JsonConvert.SerializeObject(res, new JsonSerializerSettings() { ContractResolver = new CamelCasePropertyNamesContractResolver() }));
+            try
+            {
+                var res = CalculationGraphing.GetGraph(_db.GetConsumption(type, dtFrom, dtTo));
+                return Ok(JsonConvert.SerializeObject(res, _serializerSettings));
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+                throw;
+            }
+           
         }
 
         [HttpPost]
         public IActionResult MainChart(int type, DateTime? dtFrom, DateTime? dtTo)
         {
-            var dependencyGrpaph = DependencyGrpaphLabels.GetDependencyGrpaphLabels(_db.GetConsumerWithData(type, dtFrom, dtTo));
-            return Ok(JsonConvert.SerializeObject(dependencyGrpaph, new JsonSerializerSettings() { ContractResolver = new CamelCasePropertyNamesContractResolver() }));
+            try
+            {
+                var dependencyGrpaph = DependencyGrpaphLabels.GetDependencyGrpaphLabels(_db.GetConsumerWithData(type, dtFrom, dtTo));
+                return Ok(JsonConvert.SerializeObject(dependencyGrpaph, _serializerSettings));
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+                throw;
+            }            
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

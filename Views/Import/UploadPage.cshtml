@@ -7,6 +7,10 @@
     
     <input type="file" id="fileInput">
     <button id="parseBtn">Загрука JSON данных</button>
+
+    <div id="loading" style="display:none;">        
+        <h1 id="loadingText" class="display-6">Идёт загрузка</h1>
+    </div>
 </div>
 
 
@@ -15,6 +19,7 @@
 <script type="text/javascript">
     $(function () {
         $('#parseBtn').click(function () {
+            $('#loading').show();
             var file = $('#fileInput')[0].files[0];
             var reader = new FileReader();
             reader.readAsText(file);
@@ -28,8 +33,10 @@
                     data: JSON.stringify(datas),
                     success: function (data) {
                         console.log(data);
+                        $('#loadingText').text('Данные загружены');
                     },
                     error: function (xhr, status, error) {
+                        $('#loadingText').text('Ошибка загрузки данных');
                         console.log(error);
                     }
                 });
