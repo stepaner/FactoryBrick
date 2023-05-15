@@ -13,7 +13,8 @@ namespace FactoryBrick.Data
         public ApplicationContext(DbContextOptions<ApplicationContext> options)
             : base(options)
         {
-        }
+            Database.Migrate();
+        }        
         public void SaveJsonToBase(JsonRoot root)
         {
             foreach (var consumer in root.Houses)
