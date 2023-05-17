@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Diagnostics;
+using System.Text.Json.Nodes;
 
 namespace FactoryBrick.Controllers
 {
@@ -24,11 +25,11 @@ namespace FactoryBrick.Controllers
         }
 
         [HttpPost]
-        public IActionResult GetLayerCake(int type, DateTime? dtFrom, DateTime? dtTo)
+        public IActionResult GetLayerCake()
         {
             try
             {
-                var res = _db.GetDataLayerCake(_db.GetConsumerWithData(type, dtFrom, dtTo));
+                var res = _db.GetDataLayerCake();
                 return Ok(JsonConvert.SerializeObject(res, _serializerSettings));
             }
             catch (Exception e)
@@ -36,15 +37,14 @@ namespace FactoryBrick.Controllers
                 return BadRequest(e.Message);
                 throw;
             }
-        }
+        }        
 
         [HttpPost]
         public IActionResult GetLinearRegression(int type, DateTime? dtFrom, DateTime? dtTo)
         {
             try
-            {
-                var res = CalculationGraphing.GetGraph(_db.GetConsumption(type, dtFrom, dtTo));
-                return Ok(JsonConvert.SerializeObject(res, _serializerSettings));
+            {                
+                return Ok(JsonConvert.SerializeObject(CalculationGraphing.GetGraph(_db.GetConsumption(type, dtFrom, dtTo), _db.Consumers.Where(x => x.ConsumerTypeId == type).Count()), _serializerSettings));
             }
             catch (Exception e)
             {
@@ -52,7 +52,7 @@ namespace FactoryBrick.Controllers
                 throw;
             }
            
-        }
+        }     
 
         [HttpPost]
         public IActionResult MainChart(int type, DateTime? dtFrom, DateTime? dtTo)

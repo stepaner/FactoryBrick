@@ -19,10 +19,10 @@
 
 
     <form id="dateForm">
-        <label for="date">Выберите дату начала запроса:</label>
-        <input type="date" name="dtFrom" id="date">
-        <label for="date">Выберите дату конца запроса:</label>
-        <input type="date" name="dtTo" id="date">
+        <label for="dtFrom">Выберите дату начала запроса:</label>
+        <input type="date" name="dtFrom" id="dtFrom">
+        <label for="dtTo">Выберите дату конца запроса:</label>
+        <input type="date" name="dtTo" id="dtTo">
         <button type="submit" id="submitDate">Обновить</button>
     </form>
 
@@ -33,11 +33,20 @@
     <canvas id="chartPlantLinearRegression"></canvas>
     <button id="drawLinearRegression">Обновить линейные графики</button>
 
-    <p>Слоёный пирог</p>
-    <canvas id="chartHouseLayerCake"></canvas>
-    <canvas id="chartPlantLayerCake"></canvas>
-    <button id="drawLayerCake">Обновить общий график за период</button>
+    <br><br>
+    <form id="predictation" onsubmit="return checkForm(this);>
+        <label for="brickInput">Введите стоимость кирпича:</label>
+        <input type="number" name="brick" id="brickInput" size="10" value="1" min="1">
+        <label for="tInput">Введите ТНВ:</label>
+        <input type="number" name="t" id="tInput" size="10">
+        <input type="submit" name="submit" id="calculateButton" value="Расчитать">
+        <label for="result">Расчетное потребление:</label>
+        <input type="text" name="reult" id="result" size="10">
+    </form>
+    <br><br>
 
+    <p>Слоёный пирог</p>
+    <canvas id="chartLayerCake"></canvas>
 
 </div>
 
@@ -52,22 +61,34 @@
     let chartHouseMain;
     let ctxHM = document.getElementById('chartHouseMain');
     let chartPlantMain;
-    let ctxPM = document.getElementById('chartPlantMain');
+    let ctxPM = document.getElementById('chartPlantMain');    
 
-    let chartHouseLC;
-    let ctxHLC = document.getElementById('chartHouseLayerCake');
-    let chartPlantLC;
-    let ctxPLC = document.getElementById('chartPlantLayerCake');
+    let chartLC;
+    let ctxLC = document.getElementById('chartLayerCake');
+
+    let coefficientsPlantBZ;
+    let coefficientsPlantAZ;
+    let coefficientsHouseBZ;
+    let coefficientsHouseAZ;
+
 
     function showChart(mod, chart, chart2, isHouse, stacked) {
-        let Colors = ['#f0190a', '#f0dd0a', '#6af00a', '#0a88f0', '#1d0af0', '#a00af0'];
+        let Colors = ['#f0dd0a', '#6af00a', '#0a88f0', '#1d0af0', '#a00af0', '#f00af0', '#0af0f5', '#f0a50a', '#0af00a'];
         let dataset = [];
+        let dataSt = [];
         let j = 0;
         let lbls = mod.lables;
         let dependenceGrpaphs = mod.dependencyGrpaphs;
+        let graphsCount = dependenceGrpaphs.length - 1;
         for (let item in dependenceGrpaphs) {
-            dataset.push({ label: dependenceGrpaphs[item].name, backgroundColor: Colors[j] + '60', borderColor: Colors[j], data: dependenceGrpaphs[item].datasets, fill: stacked });
+            dataset.push({ label: dependenceGrpaphs[item].name, backgroundColor: Colors[j] + '60', pointRadius: stacked ? 0 : 2, borderColor: Colors[j], data: dependenceGrpaphs[item].datasets, fill: stacked, borderWidth: stacked ? 0 : 2, stack: 'stack 0' });
             j++;
+        }
+        if (stacked) {
+            dataset[j - 1].borderWidth = 2;
+            dataset[j - 1].borderColor = '#f0190a';
+            dataset[j - 1].fill = false;
+            dataset[j - 1].stack = false;
         }
 
         const data = { labels: lbls, datasets: dataset };
@@ -75,6 +96,7 @@
             type: 'line',
             data: data,
             options: {
+                maintainAspectRatio: !stacked,
                 responsive: true,
                 plugins: {
                     title: {
@@ -116,7 +138,7 @@
         return (chart);
     }
 
-    function getMainChart(formData = '') {           
+    function getMainChart(formData = '') {
         $.ajax({
             url: '@Url.Action("MainChart", "Graph")',
             type: 'POST',
@@ -131,7 +153,7 @@
             url: '@Url.Action("MainChart", "Graph")',
             type: 'POST',
             data: 'type=2&' + formData,
-            success: function (result) {                
+            success: function (result) {
                 chartPlantMain = showChart($.parseJSON(result), chartPlantMain, ctxPM, false, false);
 
             }
@@ -142,8 +164,11 @@
             url: '@Url.Action("GetLinearRegression", "Graph")',
             type: 'POST',
             data: 'type=1&' + formData,
-            success: function (result) {                
-                chartHouseLR = showChart($.parseJSON(result), chartHouseLR, ctxHLR, true, false);
+            success: function (result) {
+                let parse = $.parseJSON(result);
+                coefficientsHouseBZ = parse.coefficientsBZ;
+                coefficientsHouseAZ = parse.coefficientsAZ;
+                chartHouseLR = showChart(parse, chartHouseLR, ctxHLR, true, false);
 
             }
         });
@@ -151,30 +176,27 @@
             url: '@Url.Action("GetLinearRegression", "Graph")',
             type: 'POST',
             data: 'type=2&' + formData,
-            success: function (result) {                
-                chartPlantLR = showChart($.parseJSON(result), chartPlantLR, ctxPLR, false, false);
+            success: function (result) {
+                let parse = $.parseJSON(result);               
+                coefficientsPlantBZ = parse.coefficientsBZ;
+                coefficientsPlantAZ = parse.coefficientsAZ;                
+                chartPlantLR = showChart(parse, chartPlantLR, ctxPLR, false, false);
             }
         });
     }
 
-    function getLayerCake(formData = '') {
+    function getLayerCake() {
         $.ajax({
             url: '@Url.Action("GetLayerCake", "Graph")',
             type: 'POST',
-            data: 'type=1&' + formData,
-            success: function (result) {                
-                chartHouseLC = showChart($.parseJSON(result), chartHouseLC, ctxHLC, true, true);
+            success: function (result) {
+
+                chartLC = showChart($.parseJSON(result), chartLC, ctxLC, true, true);
+                chartLC.canvas.parentNode.style.height = '1500px';
+
             }
         });
-        $.ajax({
-            url: '@Url.Action("GetLayerCake", "Graph")',
-            type: 'POST',
-            data: 'type=2&' + formData,
-            success: function (result) {                
-                chartPlantLC = showChart($.parseJSON(result), chartPlantLC, ctxPLC, false, true);
-            }
-        });
-    }
+    }    
 
     $(document).ready(function () {
         getMainChart();
@@ -183,21 +205,48 @@
         //---
         $('#dateForm').submit(function (event) {
             event.preventDefault();
-            formData = $(this).serialize();                
+            formData = $(this).serialize();
             getMainChart(formData);
         });
         //---
         $('#drawLinearRegression').click(function () {
-            formData = $('#dateForm').serialize();            
+            formData = $('#dateForm').serialize();
             getLinearRegression(formData);
         });
 
         //---
         $('#drawLayerCake').click(function () {
             formData = $('#dateForm').serialize();
-            getLayerCake(formData);
+            getLayerCake();
         })
         //---
+        
+      
+        $('#predictation').submit(function (event) {
+            event.preventDefault();
+            console.log(coefficientsHouseBZ);
+            let xPlant = $('#brickInput').val();
+            let xHouse = $('#tInput').val();
+            let resPlant = 0, resHouse = 0;
+            console.log(!isNaN(xPlant));
+            console.log(!isNaN(xHouse));
+            if ($.isNumeric(xPlant)) {
+
+                resPlant = (xPlant < 0 ? (coefficientsPlantBZ.b * xPlant + coefficientsPlantBZ.a) : (coefficientsPlantAZ.b * xPlant + coefficientsPlantAZ.a));
+            }
+
+            if ($.isNumeric(xHouse)) {
+
+                resHouse = (xHouse < 0 ? (coefficientsHouseBZ.b * xHouse + coefficientsHouseBZ.a) : (coefficientsHouseAZ.b * xHouse + coefficientsHouseAZ.a));
+            }           
+
+            console.log(resPlant);
+            console.log(resHouse);
+
+            $('#result').attr("value", resPlant + resHouse);            
+
+        });
+
 
     });
 

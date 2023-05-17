@@ -4,11 +4,11 @@
 
 <div class="text-center">
     <h1 class="display-6">Загрузка исходных Json данных</h1>
-    
-    <input type="file" id="fileInput">
+
+    <input type="file" id="fileInput" accept=".json">
     <button id="parseBtn">Загрука JSON данных</button>
 
-    <div id="loading" style="display:none;">        
+    <div id="loading" style="display:none;">
         <h1 id="loadingText" class="display-6">Идёт загрузка</h1>
     </div>
 </div>
@@ -16,19 +16,35 @@
 
 
 
-<script type="text/javascript">
+<script type="text/javascript">    
+    $('#fileInput').on('change', function () {
+        $('#loading').hide();
+        var fileName = $(this).val();
+        var fileExtension = fileName.split('.').pop();
+        if (fileExtension != "json") {
+            $('#fileInput').val(null);
+            alert("Расширение файла не поддерживается: " + fileExtension);            
+        }
+    });
+
     $(function () {
         $('#parseBtn').click(function () {
             $('#loading').show();
+            $('#loadingText').text('Загрука JSON данных');
             var file = $('#fileInput')[0].files[0];
             var reader = new FileReader();
             reader.readAsText(file);
             reader.onload = function () {
-                var datas = JSON.parse(reader.result);
+                try {
+                    var datas = JSON.parse(reader.result);
+                } catch (e) {
+                    $('#loadingText').text('Ошибка обработки файла');
+                    return;
+                }
                 console.log(datas);
                 $.ajax({
                     url: '/import/uploadText',
-                    type: 'POST',                    
+                    type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(datas),
                     success: function (data) {
@@ -43,5 +59,5 @@
             };
         });
     });
-   
+
 </script>

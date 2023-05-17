@@ -1,6 +1,7 @@
 ﻿using FactoryBrick.Data;
 using FactoryBrick.Models;
 using Microsoft.EntityFrameworkCore;
+using static FactoryBrick.CalculationGraphing;
 
 namespace FactoryBrick
 {
@@ -8,6 +9,8 @@ namespace FactoryBrick
     {
         public List<object> Lables { get; set; } = new List<object>();
         public List<DependencyGrpaph> DependencyGrpaphs { get; set; } = new List<DependencyGrpaph>();
+        public Coefficients CoefficientsBZ { get; set; }
+        public Coefficients CoefficientsAZ { get; set; }
         public static DependencyGrpaphLabels GetDependencyGrpaphLabels(List<Consumer> consumers)
         {
             List<DependencyGrpaph> dependencyGrpaphs = new List<DependencyGrpaph>();

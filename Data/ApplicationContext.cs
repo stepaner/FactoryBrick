@@ -69,14 +69,20 @@ namespace FactoryBrick.Data
         }
 
 
-        public DependencyGrpaphLabels GetDataLayerCake(List<Consumer> data)
+        public DependencyGrpaphLabels GetDataLayerCake()
         {
-            var dependencyGrpaphL = new DependencyGrpaphLabels() { };            
+           var dependencyGrpaphL = new DependencyGrpaphLabels() { };
+            List<Consumer> data = Consumers.Include(x => x.Consumptions).ToList();
+           var dataset = ConsumptionDatas.GroupBy(x => x.Date).Select(g => new Dataset(g.Key, g.Sum(x => x.Consumption))).ToList();
+            dataset =  dataset.OrderBy(x => x.X).ToList();
             foreach (var consumer in data)
             {
                 dependencyGrpaphL.Lables.AddRange(consumer.Consumptions.Select(x => x.Date as object));
                 dependencyGrpaphL.DependencyGrpaphs.Add(new DependencyGrpaph(consumer.Name, consumer.Consumptions.Select(x => new Dataset(x.Date, x.Consumption)).ToList()));
             }
+
+            dependencyGrpaphL.DependencyGrpaphs.Add(new DependencyGrpaph("Общее потребление", dataset));
+
             dependencyGrpaphL.Lables.Sort();
             dependencyGrpaphL.Lables = dependencyGrpaphL.Lables.Distinct().ToList();
             return dependencyGrpaphL;
@@ -96,34 +102,35 @@ namespace FactoryBrick.Data
             else if (dtTo != null)
             {
                 consumers = Consumers.Where(x => x.ConsumerTypeId == type).Include(x => x.Consumptions.Where(x => x.Date <= dtTo.Value)).ToList();
-            }
-            else
+            }            
+            else 
             {
                 consumers = Consumers.Where(x => x.ConsumerTypeId == type).Include(x => x.Consumptions).ToList();
-            }
+            }                  
             return consumers;
         }
 
-        public List<ConsumptionData> GetConsumption(int type, DateTime? dtFrom, DateTime? dtTo)
+        public List<ConsumptionData> GetConsumption(int type, DateTime? dtFrom = null, DateTime? dtTo = null)
         {
-            List<ConsumptionData> consumptionData;
+            IEnumerable<ConsumptionData> consumptionData;
             if (dtFrom != null && dtTo != null)
             {
-                consumptionData = ConsumptionDatas.Where(x => x.Date >= dtFrom.Value && x.Date <= dtTo.Value && x.Consumer.ConsumerTypeId == type).ToList();
+                consumptionData = ConsumptionDatas.Where(x => x.Date >= dtFrom.Value && x.Date <= dtTo.Value && x.Consumer.ConsumerTypeId == type).GroupBy(x => x.Dependence).Select(g => new ConsumptionData { Dependence = g.Key, Consumption = g.Sum(x => x.Consumption)});
             }
             else if (dtFrom != null)
             {
-                consumptionData = ConsumptionDatas.Where(x => x.Date >= dtFrom.Value && x.Consumer.ConsumerTypeId == type).ToList();
+                consumptionData = ConsumptionDatas.Where(x => x.Date >= dtFrom.Value && x.Consumer.ConsumerTypeId == type).GroupBy(x => x.Dependence).Select(g => new ConsumptionData { Dependence = g.Key, Consumption = g.Sum(x => x.Consumption) });
             }
             else if (dtTo != null)
             {
-                consumptionData = ConsumptionDatas.Where(x => x.Date <= dtTo.Value && x.Consumer.ConsumerTypeId == type).ToList();
-            }
+                consumptionData = ConsumptionDatas.Where(x => x.Date <= dtTo.Value && x.Consumer.ConsumerTypeId == type).GroupBy(x => x.Dependence).Select(g => new ConsumptionData { Dependence = g.Key, Consumption = g.Sum(x => x.Consumption) });
+            }            
             else
             {
+                //  consumptionData = ConsumptionDatas.Where(x => x.Consumer.ConsumerTypeId == type).GroupBy(x => x.Dependence).Select(g => new ConsumptionData { Dependence = g.Key, Consumption = g.Sum(x => x.Consumption) });
                 consumptionData = ConsumptionDatas.Where(x => x.Consumer.ConsumerTypeId == type).ToList();
             }
-            return consumptionData;
+            return consumptionData.ToList();
         }
 
     }
