@@ -33,7 +33,12 @@
             $('#loadingText').text('Загрука JSON данных');
             var file = $('#fileInput')[0].files[0];
             var reader = new FileReader();
-            reader.readAsText(file);
+            try {
+                reader.readAsText(file);
+            } catch (e) {
+                $('#loadingText').text('Ошибка чтения файла');
+                return;
+            }           
             reader.onload = function () {
                 try {
                     var datas = JSON.parse(reader.result);

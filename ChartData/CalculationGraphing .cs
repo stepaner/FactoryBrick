@@ -9,16 +9,14 @@ namespace FactoryBrick
         public class Coefficients
         {
             public decimal A { get; set; }
-            public decimal B {get; set; }
+            public decimal B { get; set; }
         }
-        
-                   
 
-        public static DependencyGrpaphLabels GetGraph(List<ConsumptionData> data, int cnt)
-        {
-            //var res = new CalculationGraphing(data);
+
+
+        public static DependencyGrpaphLabels GetGraph(List<ConsumptionData> data, int consumerCount)
+        {           
             var dependence = data.Select(d => d.Dependence).ToList();
-           
             var consumption = data.Select(d => d.Consumption).ToList();
 
             var dataBZ = data.TakeWhile(x => x.Dependence < 0).ToList();
@@ -27,9 +25,9 @@ namespace FactoryBrick
             Coefficients coefficientsBZ = new Coefficients(), coefficientsAZ = new Coefficients();
 
             if (dataBZ.Count() != 0)
-                coefficientsBZ = GetСoefficients(dataBZ);
+                coefficientsBZ = GetСoefficients(dataBZ, consumerCount);
             if (dataAZ.Count() != 0)
-                coefficientsAZ = GetСoefficients(dataAZ);
+                coefficientsAZ = GetСoefficients(dataAZ, consumerCount);
 
             var Graph = new DependencyGrpaphLabels();
             var dataset = new List<Dataset>();
@@ -39,7 +37,7 @@ namespace FactoryBrick
             for (decimal i = min; i < max; i++)
             {
                 Graph.Lables.Add(i);
-                dataset.Add(new Dataset(i, GetY(coefficientsBZ, coefficientsAZ, i)* cnt));
+                dataset.Add(new Dataset(i, GetY(coefficientsBZ, coefficientsAZ, i)));
             }
             Graph.CoefficientsBZ = coefficientsBZ;
             Graph.CoefficientsAZ = coefficientsAZ;
@@ -47,13 +45,13 @@ namespace FactoryBrick
             return Graph;
 
         }
-       
+
         public static decimal GetY(Coefficients сoefficientsBZ, Coefficients сoefficientsAZ, decimal i)
         {
             return i < 0 ? сoefficientsBZ.B * i + сoefficientsBZ.A : сoefficientsAZ.B * i + сoefficientsAZ.A;
         }
 
-        public static Coefficients GetСoefficients(List<ConsumptionData> consumptionDatas)
+        public static Coefficients GetСoefficients(List<ConsumptionData> consumptionDatas, int count)
         {
             // Задаем исходные данные
             var dependence = consumptionDatas.Select(x => x.Dependence).ToList();
@@ -66,7 +64,7 @@ namespace FactoryBrick
             var b = SumOfProducts(dependence, consumption) / SumOfSquares(dependence);
             var a = averageConsumtion - b * averageDependence;
 
-            return new Coefficients() { B = b, A = a };
+            return new Coefficients() { B = b * count, A = a * count };
         }
 
         // Метод для вычисления суммы произведений элементов двух массивов

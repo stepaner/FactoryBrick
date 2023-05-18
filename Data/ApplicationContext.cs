@@ -115,20 +115,19 @@ namespace FactoryBrick.Data
             IEnumerable<ConsumptionData> consumptionData;
             if (dtFrom != null && dtTo != null)
             {
-                consumptionData = ConsumptionDatas.Where(x => x.Date >= dtFrom.Value && x.Date <= dtTo.Value && x.Consumer.ConsumerTypeId == type).GroupBy(x => x.Dependence).Select(g => new ConsumptionData { Dependence = g.Key, Consumption = g.Sum(x => x.Consumption)});
+                consumptionData = ConsumptionDatas.Where(x => x.Date >= dtFrom.Value && x.Date <= dtTo.Value && x.Consumer.ConsumerTypeId == type).Where(x => x.Consumer.ConsumerTypeId == type);
             }
             else if (dtFrom != null)
             {
-                consumptionData = ConsumptionDatas.Where(x => x.Date >= dtFrom.Value && x.Consumer.ConsumerTypeId == type).GroupBy(x => x.Dependence).Select(g => new ConsumptionData { Dependence = g.Key, Consumption = g.Sum(x => x.Consumption) });
+                consumptionData = ConsumptionDatas.Where(x => x.Date >= dtFrom.Value && x.Consumer.ConsumerTypeId == type).Where(x => x.Consumer.ConsumerTypeId == type);
             }
             else if (dtTo != null)
             {
-                consumptionData = ConsumptionDatas.Where(x => x.Date <= dtTo.Value && x.Consumer.ConsumerTypeId == type).GroupBy(x => x.Dependence).Select(g => new ConsumptionData { Dependence = g.Key, Consumption = g.Sum(x => x.Consumption) });
+                consumptionData = ConsumptionDatas.Where(x => x.Date <= dtTo.Value && x.Consumer.ConsumerTypeId == type).Where(x => x.Consumer.ConsumerTypeId == type);
             }            
             else
-            {
-                //  consumptionData = ConsumptionDatas.Where(x => x.Consumer.ConsumerTypeId == type).GroupBy(x => x.Dependence).Select(g => new ConsumptionData { Dependence = g.Key, Consumption = g.Sum(x => x.Consumption) });
-                consumptionData = ConsumptionDatas.Where(x => x.Consumer.ConsumerTypeId == type).ToList();
+            {               
+                consumptionData = ConsumptionDatas.Where(x => x.Consumer.ConsumerTypeId == type);
             }
             return consumptionData.ToList();
         }
