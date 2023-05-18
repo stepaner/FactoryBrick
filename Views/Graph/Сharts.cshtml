@@ -34,7 +34,7 @@
     <button id="drawLinearRegression">Обновить линейные графики</button>
 
     <br><br>
-    <form id="predictation" onsubmit="return checkForm(this);>
+    <form id="predictation">
         <label for="brickInput">Введите стоимость кирпича:</label>
         <input type="number" name="brick" id="brickInput" size="10" value="1" min="1">
         <label for="tInput">Введите ТНВ:</label>
@@ -144,8 +144,7 @@
             type: 'POST',
             data: 'type=1&' + formData,
             success: function (result) {
-                mod = $.parseJSON(result);
-                console.log(mod);
+                mod = $.parseJSON(result);                
                 chartHouseMain = showChart($.parseJSON(result), chartHouseMain, ctxHM, true, false);
             }
         });
@@ -223,13 +222,10 @@
         
       
         $('#predictation').submit(function (event) {
-            event.preventDefault();
-            console.log(coefficientsHouseBZ);
+            event.preventDefault();           
             let xPlant = $('#brickInput').val();
             let xHouse = $('#tInput').val();
-            let resPlant = 0, resHouse = 0;
-            console.log(!isNaN(xPlant));
-            console.log(!isNaN(xHouse));
+            let resPlant = 0, resHouse = 0;            
             if ($.isNumeric(xPlant)) {
 
                 resPlant = (xPlant < 0 ? (coefficientsPlantBZ.b * xPlant + coefficientsPlantBZ.a) : (coefficientsPlantAZ.b * xPlant + coefficientsPlantAZ.a));
@@ -239,9 +235,6 @@
 
                 resHouse = (xHouse < 0 ? (coefficientsHouseBZ.b * xHouse + coefficientsHouseBZ.a) : (coefficientsHouseAZ.b * xHouse + coefficientsHouseAZ.a));
             }           
-
-            console.log(resPlant);
-            console.log(resHouse);
 
             $('#result').attr("value", resPlant + resHouse);            
 
